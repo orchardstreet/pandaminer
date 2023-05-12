@@ -9,9 +9,13 @@ Installation
 ### Debian-based systems
 
 ```bash
-sudo apt install build-essential git cmake -y
+sudo apt install build-essential unzip wget cmake -y
 
-git clone https://github.com/orchardstreet/pandaminer
+wget https://github.com/orchardstreet/pandaminer/archive/refs/heads/master.zip
+
+unzip master.zip
+
+cd pandanite-master
 
 cmake .
 
@@ -24,11 +28,11 @@ Usage
 ### Run interactively
 
 ```bash
-./miner
+./pandaminer
 ```
 
 ### Run with command-line options
 
 ```bash
-./miner --ip <ip_address_of_node> --port <port_number_of_node>
+./pandaminer --ip <ip_address_of_node> --port <port_number_of_node>
 ```
