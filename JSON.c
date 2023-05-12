@@ -4,10 +4,6 @@
 #include <limits.h>
 #include "headers/JSON.h"
 #include "headers/config.h"
-#define FIRST_JSON_OBJECT_SIZE 50 /* adjustable, arbitrary size */
-#define SPARE_OBJECT_OR_ARRAY_MEMBERS_SIZE FIRST_JSON_OBJECT_SIZE * 10 /* adjustable, arbitrary size */
-#define SPARE_CHARS_SIZE 5000 /* adjustable, arbitrary size up to UMAX_LONG */
-#define MAX_WHITESPACE_AROUND_STRUCTURAL_CHARACTER 100
 /* RFC series (ISSN 2070-1721) STD 90, RFC 8259: https://datatracker.ietf.org/doc/html/rfc8259 */
 /* ECMA-404, 2nd edition, December 2017: https://www.ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf */
 
