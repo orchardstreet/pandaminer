@@ -23,8 +23,12 @@ Usage
 
 ### Run interactively
 
+```bash
 ./miner
+```
 
 ### Run with command-line options
 
+```bash
 ./miner --ip <ip_address_of_node> --port <port_number_of_node>
+```
