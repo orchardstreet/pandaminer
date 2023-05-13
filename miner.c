@@ -10,6 +10,7 @@
 #include "headers/JSON.h"
 #include "headers/config.h"
 #include "headers/user_options.h"
+#include "headers/http.h"
 
 struct transaction {
 	unsigned char transaction_signature[64];
@@ -64,11 +65,13 @@ int main(int argc,char *argv[])
 	struct addrinfo *address;
 	struct addrinfo hints;
 	char port[PORT_SIZE + 3] = {0};
-	char http_request[1000] = "GET /mine HTTP/1.1\r\nHost: "; /* TODO reject lengths of too long ip and port for this buffer */
+	char http_request[100] = "GET /mine HTTP/1.1\r\nHost: "; /* TODO reject lengths of too long ip and port for this buffer */
 	char *content_length = "\r\nContent-Length: 0\r\n\r\n";
+	char *JSON_location;
 	size_t string_len = 0;
 	size_t http_request_len = 0;
 	char http_response[HTTP_RESPONSE_SIZE + 1] = {0}; /* 10MB */
+	int i;
 
 	/* Intro */
 	printf("\n     _.-=-._.-=-._.-= MINERZ 0.01 =-._.-=-._.-=-._\n\n\n\n");
@@ -143,18 +146,9 @@ int main(int argc,char *argv[])
 
 			exit(1);
 		}
-		retval_ssize_t = recv(main_socket,http_response,HTTP_RESPONSE_SIZE,0);
-		if(!retval_ssize_t) {
-			printf("Connection closed by node server\n");
-		} else if (retval_ssize_t == -1) {
-			perror("Error, recv failed");
-			exit(1);
-		} else if (retval_ssize_t < 0) {
-			fprintf(stderr,"Error, unspecified recv() error\n");
-			exit(1);
-		}
-		http_response[retval_ssize_t] = 0;
-		printf("\nHTTP response: %s\n\n",http_response);
+		http_recv(main_socket,http_response,&JSON_location);
+
+		printf("\n");
 		printf("\nmining\n");
 		usleep(1000000); /* 1 second currently */
 
