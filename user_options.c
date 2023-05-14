@@ -65,14 +65,14 @@ void get_user_options(int argc, char **argv, char *port, size_t port_buf_size, c
 			exit(EXIT_FAILURE);
 		}
 		printf("IP address entered: %s\n",node_ip_address);
-		printf("result string length: %zu\n",result_str_len);
+		/* printf("result string length: %zu\n",result_str_len); */
 		retval = readline_custom("Enter the port of the node (q to quit): ",port,port_buf_size,&result_str_len);
 		if(retval == EXIT_PROGRAM) {
 			printf("Exit readline and program...\n");
 			exit(EXIT_FAILURE);
 		}
 		printf("Port entered: %s\n",node_ip_address);
-		printf("result string length: %zu\n",result_str_len);
+		/* printf("result string length: %zu\n",result_str_len); */
 	}
 
 	return;
