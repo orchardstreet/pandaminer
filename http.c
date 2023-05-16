@@ -24,7 +24,7 @@ static unsigned char find_content_length(int *content_length, char *http_respons
 			fprintf(stderr,"HTTP response from node missing 'content-length': %s\n", http_response);
 			exit(EXIT_FAILURE);
 		}
-		if(!strncmp(browse_buf,"Content-Length: ",16) || !strncmp(browse_buf,"content-length: ",16) || !strncmp(browse_buf,"Content-length; ",16)) {
+		if(!strncmp(browse_buf,"Content-Length: ",16) || !strncmp(browse_buf,"content-length: ",16) || !strncmp(browse_buf,"Content-length: ",16)) {
 			browse_buf += 16;
 			number = strtoul(browse_buf,&end_ptr,10);
 			if(end_ptr == browse_buf) {
