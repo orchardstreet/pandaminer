@@ -17,11 +17,19 @@ char spare_chars[SPARE_CHARS_SIZE];
 unsigned long spare_chars_index = 0;
 unsigned char spare_chars_full = 0;
 
+unsigned long find_key_index(char *keyname,unsigned char the_data_type) {
+	unsigned long i;
+	for(i=0;i <= first_JSON_object_index;i++) {
+		if(!strcmp(first_JSON_object[i].key,keyname) && first_JSON_object[i].data_type == the_data_type) {
+			return i;
+		}
+	}
+	fprintf(stderr,"Could not find keyname %s of data type %d in JSON sent from node\n",keyname,the_data_type);
+	exit(EXIT_FAILURE);
+}
 
 /* input string can't be longer than an int in length */
 /* must be null character terminated */
-/* will not fail on null character, check that after running if needed */
-/* which means you should TODO check that null character is checked after running this each time */
 unsigned char skip_whitespace_and_check_null(char **browse_string) {
 	int i;
 	for(i = 0;i < MAX_WHITESPACE_AROUND_STRUCTURAL_CHARACTER && (**browse_string == 0x20 || **browse_string == 0x09 || **browse_string == 0x0A || **browse_string == 0x0D);(*browse_string)++,i++) { 
@@ -43,7 +51,6 @@ unsigned char skip_whitespace_and_check_null(char **browse_string) {
 /* must be null character terminated */
 unsigned char parse_JSON_object(char **browse_string) 
 {
-	unsigned char retval;
 	if(skip_whitespace_and_check_null(browse_string) == FAILURE)
 		return FAILURE;
 	
@@ -247,7 +254,7 @@ unsigned char parse_null(char **browse_string)
 
 unsigned char parse_array(char **browse_string)
 {
-	fprintf(stderr,"object parsing not implemented yet\n");
+	fprintf(stderr,"array parsing not implemented yet\n");
 	return FAILURE;
 }
 
@@ -285,7 +292,20 @@ unsigned char parse_number(char **browse_string)
 
 unsigned char parse_JSON(char **browse_string) 
 {
-	unsigned char value_type;
+	/* initialize global variables related to this function to 0
+	 * so that previous JSON parsing is not persistent in memory
+	 * Need to redo these global variables as non-global
+	 * if there is a need to keep multiple JSON objects in memory at the same time,
+	 * which should not be hard, perhaps by defining new structs at program launch
+	 * for each JSON object we need in memory, and each struct would contain an array of struct member
+	 * and the index for that.  In the case of multiple JSON objects in memory at once, would
+	 * also need to make sure spare_chars is appropriately large */
+	first_JSON_object_index = 0;
+	memset(spare_chars,0,SPARE_CHARS_SIZE);
+	memset(first_JSON_object,0,sizeof(struct member)*FIRST_JSON_OBJECT_SIZE);
+	spare_chars_index = 0;
+	spare_chars_full = 0;
+
 	/* skip whitespace and check for null character */
 	if(skip_whitespace_and_check_null(browse_string) == FAILURE)
 		return FAILURE;

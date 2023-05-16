@@ -18,7 +18,11 @@ struct member {
 
 
 unsigned char parse_JSON(char **browse_string);
+unsigned long find_key_index(char *keyname,unsigned char the_data_type);
 
 extern struct member first_JSON_object[FIRST_JSON_OBJECT_SIZE];
+extern unsigned long first_JSON_object_index;
+extern char spare_chars[SPARE_CHARS_SIZE];
+
 
 #endif

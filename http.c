@@ -20,11 +20,11 @@ static unsigned char find_content_length(int *content_length, char *http_respons
 			exit(EXIT_FAILURE);
 		}
 		browse_buf += 2;
-		if(strstr(browse_buf,"\r\n")) {
+		if(!strncmp(browse_buf,"\r\n",2)) {
 			fprintf(stderr,"HTTP response from node missing 'content-length': %s\n", http_response);
 			exit(EXIT_FAILURE);
 		}
-		if(!strncmp(browse_buf,"Content-Length: ",16)) {
+		if(!strncmp(browse_buf,"Content-Length: ",16) || !strncmp(browse_buf,"content-length: ",16) || !strncmp(browse_buf,"Content-length; ",16)) {
 			browse_buf += 16;
 			number = strtoul(browse_buf,&end_ptr,10);
 			if(end_ptr == browse_buf) {
@@ -52,6 +52,8 @@ unsigned char http_recv(int main_socket,char *http_response,char **body_location
 	unsigned char found_content_length = 0;
 	(*body_location) = NULL;
 
+	memset(http_response,0,HTTP_RESPONSE_SIZE + 1);
+
 	for(;;) {
 		retval_ssize_t = recv(main_socket,http_response + http_response_index,bytes_left_in_http_response,0);
 		if(!retval_ssize_t) {
@@ -68,7 +70,7 @@ unsigned char http_recv(int main_socket,char *http_response,char **body_location
 
 		/* terminate response with null character */
 		http_response[http_response_index + retval_ssize_t] = 0;
-		printf("\nHTTP response: %s\n\n",http_response);
+		/* printf("\nHTTP response: %s\n\n",http_response); */
 
 		if(!(*body_location)) {
 			(*body_location) =  strstr(http_response + http_response_index,"\r\n\r\n");

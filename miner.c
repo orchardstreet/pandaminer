@@ -54,6 +54,7 @@ int main(int argc,char *argv[])
 	char *http_request_browse;
 	int retval_int;
 	ssize_t retval_ssize_t;
+	unsigned char retval_uchar;
 	int main_socket;
 	unsigned long all_pdn_earnings;
 	unsigned int next_block; /* also called chainLength + 1 */
@@ -65,12 +66,13 @@ int main(int argc,char *argv[])
 	struct addrinfo *address;
 	struct addrinfo hints;
 	char port[PORT_SIZE + 3] = {0};
-	char http_request[100] = "GET /mine HTTP/1.1\r\nHost: "; /* TODO reject lengths of too long ip and port for this buffer */
+	char http_request[100] = "GET /mine HTTP/1.1\r\nHost: ";
 	char *content_length = "\r\nContent-Length: 0\r\n\r\n";
 	char *JSON_location;
 	size_t string_len = 0;
 	size_t http_request_len = 0;
 	char http_response[HTTP_RESPONSE_SIZE + 1] = {0}; /* 10MB */
+	unsigned long key_index;
 	int i;
 
 	/* Intro */
@@ -128,14 +130,14 @@ int main(int argc,char *argv[])
 	string_len = strlen(content_length);
 	memcpy(http_request_browse,content_length,string_len + 1); /* extra 1 for null character */
 	http_request_browse += string_len;
-	printf("request: \n\n%s",http_request);
 	http_request_len = http_request_browse - http_request;
-	printf("request length: %zu\n",strlen(http_request));
 
-	/*write message to socket, then recv answer*/
+	struct block block_to_hash;
 
 	/* mining loop */
 	for(;;) {
+
+		/* ask node for mining details via /mine http request to node API */
 		retval_ssize_t = write(main_socket,http_request,http_request_len);
 		if(retval_ssize_t == -1) {
 			perror("Error, write() failed");
@@ -146,10 +148,45 @@ int main(int argc,char *argv[])
 
 			exit(1);
 		}
+		printf("HTTP request: \n\n%s\n",http_request);
+		printf("request length: %zu\n",strlen(http_request));
+
+		/* receive mining details from node API into http_response buf */
 		http_recv(main_socket,http_response,&JSON_location);
+		printf("\nHTTP response: \n\n%s\n\n",http_response);
+
+		/* Parse body of http response from http_response buf
+		 * The body should be a JSON object containing the mining details */
+		if(parse_JSON(&JSON_location) == FAILURE) {
+			fprintf(stderr,"Could not parse JSON sent from node server\n");
+			exit(EXIT_FAILURE);
+		}
+
+		/* Look for mining variables in JSON sent from node via HTTP response
+		 * The parsed JSON variables we are looking through were stored in 'first_JSON_object'
+		 * by the previous parse_JSON() function we called.
+		 * 'first_JSON_object' is a global array of struct member.
+		 * The array was made global via 'extern' in JSON.h */
+		printf("Mining details: \n");
+		key_index = find_key_index("chainLength",IS_NUMBER);
+		next_block = (unsigned int) first_JSON_object[key_index].data.number_bool_or_null_type + 1;
+		printf("next block: %d\n",next_block);
+		key_index = find_key_index("challengeSize",IS_NUMBER);
+		difficulty_target = (unsigned int) first_JSON_object[key_index].data.number_bool_or_null_type;
+		printf("difficulty target: %d\n",difficulty_target);
+		key_index = find_key_index("lastHash",IS_STRING);
+		printf("last block hash: %s\n",first_JSON_object[key_index].data.string_type);
+		if(strlen(first_JSON_object[key_index].data.string_type) != 64) {
+			fprintf(stderr,"last block hash sent from node is not 32 bytes\n");
+		}
+		key_index = find_key_index("lastTimestamp",IS_STRING);
+		printf("Last timestamp: %s\n",first_JSON_object[key_index].data.string_type);
+		key_index = find_key_index("miningFee",IS_NUMBER);
+		mining_fee = first_JSON_object[key_index].data.number_bool_or_null_type;
+		printf("Mining fee aka block reward: %lu\n",first_JSON_object[key_index].data.number_bool_or_null_type);
 
 		printf("\n");
-		printf("\nmining\n");
+		printf("\nmining...\n\n");
 		usleep(1000000); /* 1 second currently */
 
 	}

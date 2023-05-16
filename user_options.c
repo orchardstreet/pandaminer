@@ -5,7 +5,7 @@
 #include "headers/readline_custom.h"
 #include "headers/config.h"
 
-unsigned char parse_command_line(int argc, char **argv, char *port, char *node_ip_address) {
+unsigned char parse_command_line(char **argv, char *port, char *node_ip_address) {
 
 	unsigned char cmd_port_valid = 0;
 	unsigned char cmd_ip_valid = 0;
@@ -55,7 +55,7 @@ void get_user_options(int argc, char **argv, char *port, size_t port_buf_size, c
 		fprintf(stderr,"Invalid command line parameters\n\nFormat: ./miner --ip [ip address] --port [port number]\n\n"
 				"Let's try again...\n\n");
 	} else if (argc == 5) {
-		has_valid_parameters = parse_command_line(argc,argv,port,node_ip_address);
+		has_valid_parameters = parse_command_line(argv,port,node_ip_address);
 	}
 
 	if(!has_valid_parameters) {
