@@ -30,7 +30,7 @@ unsigned long find_key_index(char *keyname,unsigned char the_data_type) {
 
 /* input string can't be longer than an int in length */
 /* must be null character terminated */
-unsigned char skip_whitespace_and_check_null(char **browse_string) {
+static unsigned char skip_whitespace_and_check_null(char **browse_string) {
 	int i;
 	for(i = 0;i < MAX_WHITESPACE_AROUND_STRUCTURAL_CHARACTER && (**browse_string == 0x20 || **browse_string == 0x09 || **browse_string == 0x0A || **browse_string == 0x0D);(*browse_string)++,i++) { 
 		 /* printf("whitespace encountered, i: %d\n",i); */
@@ -49,7 +49,7 @@ unsigned char skip_whitespace_and_check_null(char **browse_string) {
 }
 
 /* must be null character terminated */
-unsigned char parse_JSON_object(char **browse_string) 
+static unsigned char parse_JSON_object(char **browse_string)
 {
 	if(skip_whitespace_and_check_null(browse_string) == FAILURE)
 		return FAILURE;
@@ -57,7 +57,7 @@ unsigned char parse_JSON_object(char **browse_string)
 	return SUCCESS;
 }
 
-unsigned char parse_string(char **browse_string)
+static unsigned char parse_string(char **browse_string)
 {
 	char *beginning_of_key;
 	char *end_of_key;
@@ -127,7 +127,8 @@ unsigned char parse_string(char **browse_string)
 		}
 	}
 }
-unsigned char validate_key(char **browse_string)
+
+static unsigned char validate_key(char **browse_string)
 {
 	char *beginning_of_key;
 	char *end_of_key;
@@ -211,7 +212,7 @@ unsigned char validate_key(char **browse_string)
 	}
 }
 
-unsigned char parse_true(char **browse_string) 
+static unsigned char parse_true(char **browse_string)
 {
 	if(!strncmp(*browse_string,"rue",3)) {
 		(*browse_string) += 3;
@@ -225,7 +226,7 @@ unsigned char parse_true(char **browse_string)
 
 }
 
-unsigned char parse_false(char **browse_string) 
+static unsigned char parse_false(char **browse_string)
 {
 	if(!strncmp(*browse_string,"alse",4)) {
 		(*browse_string) += 4;
@@ -239,7 +240,7 @@ unsigned char parse_false(char **browse_string)
 
 }
 
-unsigned char parse_null(char **browse_string) 
+static unsigned char parse_null(char **browse_string)
 {
 	if(!strncmp(*browse_string,"ull",3)) {
 		(*browse_string) += 3;
@@ -252,19 +253,19 @@ unsigned char parse_null(char **browse_string)
 	return FAILURE;
 }
 
-unsigned char parse_array(char **browse_string)
+static unsigned char parse_array(char **browse_string)
 {
 	fprintf(stderr,"array parsing not implemented yet\n");
 	return FAILURE;
 }
 
-unsigned char parse_object(char **browse_string) 
+static unsigned char parse_object(char **browse_string)
 {
 	fprintf(stderr,"object parsing not implemented yet\n");
 	return FAILURE;
 }
 
-unsigned char parse_number(char **browse_string) 
+static unsigned char parse_number(char **browse_string)
 {
 	char *the_endptr;
 	unsigned long strtoul_result = 0;

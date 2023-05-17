@@ -8,7 +8,7 @@
 
 char quit_prompt_input[QUIT_PROMPT_RESULT_SIZE]; /* Every compiler 0s out global variables, so this is 0d out, doesn't matter for current implementation though */
 
-signed char flush_stdin(void) {
+static signed char flush_stdin(void) {
 	int c;
 	for(;;) {
 		c = getc(stdin);
@@ -24,7 +24,7 @@ signed char flush_stdin(void) {
 	}
 }
 
-signed char prompt_quit(char *prompt) {
+static signed char prompt_quit(char *prompt) {
 	/* Asks user if he wants to quit or not
          * returns YES on "yes", NO on "no, and EXIT_PROGRAM if the program should exit 
 	 * Attempts to read from stdin to memory, until a valid input is given. 

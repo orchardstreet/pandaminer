@@ -5,7 +5,7 @@
 #include "headers/readline_custom.h"
 #include "headers/config.h"
 
-unsigned char parse_command_line(char **argv, char *port, char *node_ip_address) {
+static unsigned char parse_command_line(char **argv, char *port, char *node_ip_address) {
 
 	unsigned char cmd_port_valid = 0;
 	unsigned char cmd_ip_valid = 0;

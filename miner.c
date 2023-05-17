@@ -6,11 +6,14 @@
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <netdb.h>
+#include <limits.h>
 #include <string.h>
 #include "headers/JSON.h"
 #include "headers/config.h"
 #include "headers/user_options.h"
 #include "headers/http.h"
+#include "headers/utils.h"
+
 
 struct transaction {
 	unsigned char transaction_signature[64];
@@ -29,7 +32,7 @@ struct block {
 	unsigned int difficulty_target;
 	struct transaction transactions[25000];
 	unsigned char merkle_root_of_transactions[32];
-	unsigned char previous_sha256_block_hash[32];
+	unsigned char previous_sha256_block_hash[32]; /* important to be unsigned, or else a function breaks */
 	unsigned char nonce[32];
 };
 
@@ -68,6 +71,7 @@ int main(int argc,char *argv[])
 	char port[PORT_SIZE + 3] = {0};
 	char http_request[100] = "GET /mine HTTP/1.1\r\nHost: ";
 	char *content_length = "\r\nContent-Length: 0\r\n\r\n";
+	char *end_ptr;
 	char *JSON_location;
 	size_t string_len = 0;
 	size_t http_request_len = 0;
@@ -168,19 +172,47 @@ int main(int argc,char *argv[])
 		 * 'first_JSON_object' is a global array of struct member.
 		 * The array was made global via 'extern' in JSON.h */
 		printf("Mining details: \n");
+
+		/* next block ID */
 		key_index = find_key_index("chainLength",IS_NUMBER);
+		if(first_JSON_object[key_index].data.number_bool_or_null_type + 1 > UINT_MAX) {
+			fprintf(stderr,"next block ID cannot be larger than %u",UINT_MAX);
+			exit(EXIT_FAILURE);
+		}
 		next_block = (unsigned int) first_JSON_object[key_index].data.number_bool_or_null_type + 1;
 		printf("next block: %d\n",next_block);
+
+		/* difficulty target */
 		key_index = find_key_index("challengeSize",IS_NUMBER);
+		if(first_JSON_object[key_index].data.number_bool_or_null_type > UINT_MAX) {
+			fprintf(stderr,"Challenge size cannot be larger than %u",UINT_MAX);
+			exit(EXIT_FAILURE);
+		}
 		difficulty_target = (unsigned int) first_JSON_object[key_index].data.number_bool_or_null_type;
 		printf("difficulty target: %d\n",difficulty_target);
+
+		/* last block hash */
 		key_index = find_key_index("lastHash",IS_STRING);
-		printf("last block hash: %s\n",first_JSON_object[key_index].data.string_type);
 		if(strlen(first_JSON_object[key_index].data.string_type) != 64) {
 			fprintf(stderr,"last block hash sent from node is not 32 bytes\n");
 		}
+		null_character_terminated_64_byte_hex_string_to_32_bytes(first_JSON_object[key_index].data.string_type, previous_sha256_block_hash);
+		printf("Last block hash: ");
+		for(i = 0;i < 32; i++) {
+			printf("%02x",previous_sha256_block_hash[i]);
+		}
+		printf("\n");
+
+		/* last timestamp */
 		key_index = find_key_index("lastTimestamp",IS_STRING);
-		printf("Last timestamp: %s\n",first_JSON_object[key_index].data.string_type);
+		last_timestamp = strtoul(first_JSON_object[key_index].data.string_type,&end_ptr,10);
+		if(end_ptr == first_JSON_object[key_index].data.string_type || last_timestamp == ULONG_MAX || *end_ptr != '\0') {
+			fprintf(stderr,"invalid timestamp send from node server after /mine request\n");
+			exit(EXIT_FAILURE);
+		}
+		printf("Last timestamp: %lu\n",last_timestamp);
+
+		/* mining fee */
 		key_index = find_key_index("miningFee",IS_NUMBER);
 		mining_fee = first_JSON_object[key_index].data.number_bool_or_null_type;
 		printf("Mining fee aka block reward: %lu\n",first_JSON_object[key_index].data.number_bool_or_null_type);
