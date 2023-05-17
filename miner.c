@@ -82,8 +82,6 @@ int main(int argc,char *argv[])
 	/* Intro */
 	printf("\n     _.-=-._.-=-._.-= MINERZ 0.01 =-._.-=-._.-=-._\n\n\n\n");
 
-	get_user_options(argc,argv,port,sizeof(port),node_ip_address,sizeof(node_ip_address));
-
 	/* Exit out of most incompatible memory architectures */
 	if(sizeof(void *) != 8) {
 		fprintf(stderr,"Error: please use a 64-bit computer\n");
@@ -97,6 +95,14 @@ int main(int argc,char *argv[])
 		fprintf(stderr,"Error: please use a computer where unsigned long is 8 bytes\n");
 		exit(1);
 	}
+	if(check_endianness() == IS_BIG_ENDIAN) {
+		fprintf(stderr,"Error, please use a computer with little endian memory layout\n"
+						"Your computer uses big endian memory layout instead\n");
+		exit(EXIT_FAILURE);
+	}
+
+	/* Get user options */
+	get_user_options(argc,argv,port,sizeof(port),node_ip_address,sizeof(node_ip_address));
 
 	/* Connect to node */
 	memset(&hints,0,sizeof(struct addrinfo));

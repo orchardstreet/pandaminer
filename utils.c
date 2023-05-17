@@ -42,3 +42,11 @@ unsigned char null_character_terminated_64_byte_hex_string_to_32_bytes(char *byt
 	return SUCCESS;
 
 }
+
+unsigned char check_endianness(void){
+	unsigned short a=0x1234;
+	if (*((unsigned char *)&a)==0x12)
+		return IS_BIG_ENDIAN;
+	else
+		return IS_LITTLE_ENDIAN;
+}
