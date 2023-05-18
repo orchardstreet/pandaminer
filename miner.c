@@ -8,6 +8,7 @@
 #include <netdb.h>
 #include <limits.h>
 #include <string.h>
+#include <time.h>
 #include "headers/JSON.h"
 #include "headers/config.h"
 #include "headers/user_options.h"
@@ -64,17 +65,19 @@ int main(int argc,char *argv[])
 	unsigned char previous_sha256_block_hash[32]; /* needs conversion from node */
 	unsigned int difficulty_target; /* also called challengeSize */
 	unsigned long last_timestamp; /* need to convert from string */
+	unsigned long current_timestamp;
 	unsigned long mining_fee; /* also called 'total', the reward we get from solving block  */
 	struct transaction fee_to_our_wallet; /* our reward :) */
-	struct addrinfo *address;
-	struct addrinfo hints;
 	char port[PORT_SIZE + 3] = {0};
-	char http_request[100] = "GET /mine HTTP/1.1\r\nHost: ";
+	char mine_request_headers[] = "GET /mine HTTP/1.1\r\nHost: ";
+	char tx_request_headers[] = "GET /gettx HTTP/1.1\r\nContent-Type: application/octet-stream\r\nHost: ";
+	char http_mine_request[200] = {0};
+	char http_tx_request[300] = {0};
 	char *content_length = "\r\nContent-Length: 0\r\n\r\n";
 	char *end_ptr;
 	char *JSON_location;
+	char *tx_location;
 	size_t string_len = 0;
-	size_t http_request_len = 0;
 	char http_response[HTTP_RESPONSE_SIZE + 1] = {0}; /* 10MB */
 	unsigned long key_index;
 	int i;
@@ -105,65 +108,22 @@ int main(int argc,char *argv[])
 	get_user_options(argc,argv,port,sizeof(port),node_ip_address,sizeof(node_ip_address));
 
 	/* Connect to node */
-	memset(&hints,0,sizeof(struct addrinfo));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-	if(getaddrinfo(node_ip_address, port, &hints, &address) != 0) {
-		perror("Error, getaddrinfo() failed");
-		exit(1);
-	}
-	if(address->ai_family != AF_INET && address->ai_family != AF_INET6) {
-		fprintf(stderr,"Error, server address isn't ipv4 or ipv6, exiting...\n");
-		exit(1);
-	}
-	if((main_socket = socket(address->ai_family,SOCK_STREAM,0)) == -1) {
-		perror("Error, socket() failed");
-		exit(1);
-	}
-	printf("Connecting to Pandanite node at address %s, port %s...\n",node_ip_address,port);
-	if(connect(main_socket,address->ai_addr,address->ai_addrlen) == -1) {
-		perror("Error, connect() failed");
-		exit(1);
-	}
-	printf("Success, Connected to Pandanite node at address %s, port %s...\n",node_ip_address, port);
-	freeaddrinfo(address);
 
-	http_request_browse = http_request + strlen(http_request);
-	string_len = strlen(node_ip_address);
-	memcpy(http_request_browse,node_ip_address,string_len);
-	http_request_browse += string_len;
-	memcpy(http_request_browse,":",1);
-	http_request_browse++;
-	string_len = strlen(port);
-	memcpy(http_request_browse,port,string_len);
-	http_request_browse += string_len;
-	string_len = strlen(content_length);
-	memcpy(http_request_browse,content_length,string_len + 1); /* extra 1 for null character */
-	http_request_browse += string_len;
-	http_request_len = http_request_browse - http_request;
-
+	sprintf(http_mine_request,"%s%s:%s%s",mine_request_headers,node_ip_address,port,content_length);
+	sprintf(http_tx_request,"%s%s:%s%s",tx_request_headers,node_ip_address,port,content_length);
 	struct block block_to_hash;
+
+	http_connect(&main_socket,node_ip_address,port);
 
 	/* mining loop */
 	for(;;) {
 
 		/* ask node for mining details via /mine http request to node API */
-		retval_ssize_t = write(main_socket,http_request,http_request_len);
-		if(retval_ssize_t == -1) {
-			perror("Error, write() failed");
-			exit(1);
-		} else if (retval_ssize_t != http_request_len) {
-			fprintf(stderr,"partial write occurred," 
-					" need to write code to handle this later\nexiting...\n");
-
-			exit(1);
-		}
-		printf("HTTP request: \n\n%s\n",http_request);
-		printf("request length: %zu\n",strlen(http_request));
+		http_write(main_socket,http_mine_request);
 
 		/* receive mining details from node API into http_response buf */
 		http_recv(main_socket,http_response,&JSON_location);
-		printf("\nHTTP response: \n\n%s\n\n",http_response);
+
 
 		/* Parse body of http response from http_response buf
 		 * The body should be a JSON object containing the mining details */
@@ -187,6 +147,7 @@ int main(int argc,char *argv[])
 		}
 		next_block = (unsigned int) first_JSON_object[key_index].data.number_bool_or_null_type + 1;
 		printf("next block: %d\n",next_block);
+		block_to_hash.this_block_id = next_block;
 
 		/* difficulty target */
 		key_index = find_key_index("challengeSize",IS_NUMBER);
@@ -196,6 +157,7 @@ int main(int argc,char *argv[])
 		}
 		difficulty_target = (unsigned int) first_JSON_object[key_index].data.number_bool_or_null_type;
 		printf("difficulty target: %d\n",difficulty_target);
+		block_to_hash.difficulty_target = difficulty_target;
 
 		/* last block hash */
 		key_index = find_key_index("lastHash",IS_STRING);
@@ -208,6 +170,7 @@ int main(int argc,char *argv[])
 			printf("%02x",previous_sha256_block_hash[i]);
 		}
 		printf("\n");
+		memcpy(block_to_hash.previous_sha256_block_hash,previous_sha256_block_hash,32);
 
 		/* last timestamp */
 		key_index = find_key_index("lastTimestamp",IS_STRING);
@@ -217,11 +180,29 @@ int main(int argc,char *argv[])
 			exit(EXIT_FAILURE);
 		}
 		printf("Last timestamp: %lu\n",last_timestamp);
+		current_timestamp = (unsigned long) time(NULL);
+		printf("Current timestamp: %lu\n",current_timestamp);
+		if(current_timestamp < last_timestamp) {
+			block_to_hash.current_timestamp = last_timestamp + 1;
+		} else {
+			block_to_hash.current_timestamp = current_timestamp;
+		}
 
 		/* mining fee */
 		key_index = find_key_index("miningFee",IS_NUMBER);
 		mining_fee = first_JSON_object[key_index].data.number_bool_or_null_type;
 		printf("Mining fee aka block reward: %lu\n",first_JSON_object[key_index].data.number_bool_or_null_type);
+
+		/* ask node for transactions to put in next block */
+		http_write(main_socket,http_tx_request);
+
+		/* receive mining details from node API into http_response buf */
+		http_recv(main_socket,http_response,&tx_location);
+		printf("body length: %zu\n",strlen(tx_location));
+		if(strlen(tx_location) != 0) {
+			printf("found transactions\n");
+			exit(EXIT_SUCCESS);
+		}
 
 		printf("\n");
 		printf("\nmining...\n\n");

@@ -4,6 +4,8 @@
 #include <sys/socket.h>
 #include <string.h>
 #include <limits.h>
+#include <unistd.h>
+#include <netdb.h>
 #include "headers/http.h"
 #include "headers/config.h"
 
@@ -70,7 +72,6 @@ unsigned char http_recv(int main_socket,char *http_response,char **body_location
 
 		/* terminate response with null character */
 		http_response[http_response_index + retval_ssize_t] = 0;
-		/* printf("\nHTTP response: %s\n\n",http_response); */
 
 		if(!(*body_location)) {
 			(*body_location) =  strstr(http_response + http_response_index,"\r\n\r\n");
@@ -87,6 +88,7 @@ unsigned char http_recv(int main_socket,char *http_response,char **body_location
 			}
 		}
 		if(found_content_length && (strlen(*body_location) == content_length)) {
+			printf("\nHTTP response: \n\n%s\n\n",http_response); /* unecessary debug info */
 			return SUCCESS;
 		}
 
@@ -102,3 +104,55 @@ unsigned char http_recv(int main_socket,char *http_response,char **body_location
 	}
 
 }
+
+unsigned char http_write(int main_socket, char *http_request)
+{
+	ssize_t retval_ssize_t;
+	size_t http_request_len = strlen(http_request);
+
+	retval_ssize_t = write(main_socket,http_request,http_request_len);
+	if(retval_ssize_t == -1) {
+		perror("Error, write() failed");
+		exit(EXIT_FAILURE);
+	} else if (retval_ssize_t != http_request_len) {
+		fprintf(stderr,"partial write occurred,"
+				" need to write code to handle this later\nexiting...\n");
+
+		exit(EXIT_FAILURE);
+	}
+	printf("HTTP request: \n\n%s\n",http_request);
+	printf("request length: %zu\n",http_request_len);
+
+	return SUCCESS;
+
+}
+
+unsigned char http_connect(int *main_socket,char *node_ip_address,char *port) {
+
+	struct addrinfo hints;
+	struct addrinfo *address;
+
+	memset(&hints,0,sizeof(struct addrinfo));
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	if(getaddrinfo(node_ip_address, port, &hints, &address) != 0) {
+		perror("Error, getaddrinfo() failed");
+		exit(1);
+	}
+	if(address->ai_family != AF_INET && address->ai_family != AF_INET6) {
+		fprintf(stderr,"Error, server address isn't ipv4 or ipv6, exiting...\n");
+		exit(1);
+	}
+	if((*main_socket = socket(address->ai_family,SOCK_STREAM,0)) == -1) {
+		perror("Error, socket() failed");
+		exit(1);
+	}
+	printf("Connecting to Pandanite node at address %s, port %s...\n",node_ip_address,port);
+	if(connect(*main_socket,address->ai_addr,address->ai_addrlen) == -1) {
+		perror("Error, connect() failed");
+		exit(1);
+	}
+	printf("Success, Connected to Pandanite node at address %s, port %s...\n",node_ip_address, port);
+	freeaddrinfo(address);
+}
+
