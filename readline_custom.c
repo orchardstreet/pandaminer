@@ -191,7 +191,7 @@ readline_custom(char *prompt,char *input, size_t input_size_temp,size_t *result_
 			/* flush stdin */
 			retval = flush_stdin();
 			if (retval == CONTINUE) {
-				printf("Cannot enter more than %zu characters, try again\n",input_size_temp - 3);
+				printf("Cannot enter more than %lu characters, try again\n",(unsigned long) input_size_temp - 3);
 				continue;
 			} else if (retval == EOF_SEEN) {
 				retval = prompt_quit("Are you sure you want to quit? (y)es/(n)o: ");

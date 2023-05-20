@@ -52,9 +52,6 @@ main(int argc,char *argv[])
 		0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,
 		0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,
 		0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05,0x05};
-	//char node_ip_address[40] = "192.168.1.144"; /* ascii representation of ipv6 is maximum 39 bytes */
-	//char node_ip_address[40] = "142.251.163.101"; /* ascii representation of ipv6 is maximum 39 bytes */
-	//char node_ip_address[NODE_IP_ADDRESS_SIZE + 1] = "192.168.1.145"; /* ascii representation of ipv6 is maximum 39 bytes + null character */
 	char node_ip_address[NODE_IP_ADDRESS_SIZE + 3] = {0}; /* ascii representation of ipv6 is maximum 39 bytes + null character */
 	char *http_request_browse;
 	int retval_int;
@@ -82,6 +79,7 @@ main(int argc,char *argv[])
 	char http_response[HTTP_RESPONSE_SIZE + 1] = {0}; /* 10MB */
 	unsigned long key_index;
 	int i;
+	struct block block_to_hash;
 
 	/* Intro */
 	printf("\n     _.-=-._.-=-._.-= MINERZ 0.01 =-._.-=-._.-=-._\n\n\n\n");
@@ -112,7 +110,6 @@ main(int argc,char *argv[])
 
 	sprintf(http_mine_request,"%s%s:%s%s",mine_request_headers,node_ip_address,port,content_length);
 	sprintf(http_tx_request,"%s%s:%s%s",tx_request_headers,node_ip_address,port,content_length);
-	struct block block_to_hash;
 
 	http_connect(&main_socket,node_ip_address,port);
 
