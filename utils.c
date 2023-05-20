@@ -4,8 +4,8 @@
 #include "headers/config.h"
 #include "headers/utils.h"
 
-
-unsigned char null_character_terminated_64_byte_hex_string_to_32_bytes(char *bytes_64_plus_null_orig, unsigned char *bytes_32)
+unsigned char
+null_character_terminated_64_byte_hex_string_to_32_bytes(char *bytes_64_plus_null_orig, unsigned char *bytes_32)
 {
 
 	char *endptr;
@@ -14,12 +14,11 @@ unsigned char null_character_terminated_64_byte_hex_string_to_32_bytes(char *byt
 	char bytes_64_plus_null[65] = {0};
 	char *bytes_64_plus_null_browse;
 	unsigned long temp_num;
-	int i;
 
 	memcpy(bytes_64_plus_null,bytes_64_plus_null_orig,65);
 	bytes_64_plus_null_browse = bytes_64_plus_null + 48;
 
-	for(;;bytes_32_browse -= 8,bytes_64_plus_null_browse -= 16) {
+	for (;;bytes_32_browse -= 8,bytes_64_plus_null_browse -= 16) {
 		temp_num = strtoul(bytes_64_plus_null_browse,&endptr,16);
 		if(bytes_64_plus_null_browse == endptr) {
 			fprintf(stderr,"Previous hash sent from node is invalid\n");
@@ -43,7 +42,8 @@ unsigned char null_character_terminated_64_byte_hex_string_to_32_bytes(char *byt
 
 }
 
-unsigned char check_endianness(void){
+unsigned char
+check_endianness(void){
 	unsigned short a=0x1234;
 	if (*((unsigned char *)&a)==0x12)
 		return IS_BIG_ENDIAN;

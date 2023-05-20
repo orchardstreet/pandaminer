@@ -39,7 +39,8 @@ struct block {
 
 
 
-int main(int argc,char *argv[])
+int
+main(int argc,char *argv[])
 {
 
 	/* Initialize variables */
@@ -86,19 +87,19 @@ int main(int argc,char *argv[])
 	printf("\n     _.-=-._.-=-._.-= MINERZ 0.01 =-._.-=-._.-=-._\n\n\n\n");
 
 	/* Exit out of most incompatible memory architectures */
-	if(sizeof(void *) != 8) {
+	if (sizeof(void *) != 8) {
 		fprintf(stderr,"Error: please use a 64-bit computer\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
-	if(sizeof(int) != 4) {
+	if (sizeof(int) != 4) {
 		fprintf(stderr,"Error: please use a computer where an int is 4 bytes\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
-	if(sizeof(unsigned long) != 8) {
+	if (sizeof(unsigned long) != 8) {
 		fprintf(stderr,"Error: please use a computer where unsigned long is 8 bytes\n");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
-	if(check_endianness() == IS_BIG_ENDIAN) {
+	if (check_endianness() == IS_BIG_ENDIAN) {
 		fprintf(stderr,"Error, please use a computer with little endian memory layout\n"
 						"Your computer uses big endian memory layout instead\n");
 		exit(EXIT_FAILURE);
@@ -116,7 +117,7 @@ int main(int argc,char *argv[])
 	http_connect(&main_socket,node_ip_address,port);
 
 	/* mining loop */
-	for(;;) {
+	for (;;) {
 
 		/* ask node for mining details via /mine http request to node API */
 		http_write(main_socket,http_mine_request);
@@ -127,7 +128,7 @@ int main(int argc,char *argv[])
 
 		/* Parse body of http response from http_response buf
 		 * The body should be a JSON object containing the mining details */
-		if(parse_JSON(&JSON_location) == FAILURE) {
+		if (parse_JSON(&JSON_location) == FAILURE) {
 			fprintf(stderr,"Could not parse JSON sent from node server\n");
 			exit(EXIT_FAILURE);
 		}
@@ -141,7 +142,7 @@ int main(int argc,char *argv[])
 
 		/* next block ID */
 		key_index = find_key_index("chainLength",IS_NUMBER);
-		if(first_JSON_object[key_index].data.number_bool_or_null_type + 1 > UINT_MAX) {
+		if (first_JSON_object[key_index].data.number_bool_or_null_type + 1 > UINT_MAX) {
 			fprintf(stderr,"next block ID cannot be larger than %u",UINT_MAX);
 			exit(EXIT_FAILURE);
 		}
@@ -151,7 +152,7 @@ int main(int argc,char *argv[])
 
 		/* difficulty target */
 		key_index = find_key_index("challengeSize",IS_NUMBER);
-		if(first_JSON_object[key_index].data.number_bool_or_null_type > UINT_MAX) {
+		if (first_JSON_object[key_index].data.number_bool_or_null_type > UINT_MAX) {
 			fprintf(stderr,"Challenge size cannot be larger than %u",UINT_MAX);
 			exit(EXIT_FAILURE);
 		}
@@ -161,7 +162,7 @@ int main(int argc,char *argv[])
 
 		/* last block hash */
 		key_index = find_key_index("lastHash",IS_STRING);
-		if(strlen(first_JSON_object[key_index].data.string_type) != 64) {
+		if (strlen(first_JSON_object[key_index].data.string_type) != 64) {
 			fprintf(stderr,"last block hash sent from node is not 32 bytes\n");
 		}
 		null_character_terminated_64_byte_hex_string_to_32_bytes(first_JSON_object[key_index].data.string_type, previous_sha256_block_hash);
@@ -175,14 +176,14 @@ int main(int argc,char *argv[])
 		/* last timestamp */
 		key_index = find_key_index("lastTimestamp",IS_STRING);
 		last_timestamp = strtoul(first_JSON_object[key_index].data.string_type,&end_ptr,10);
-		if(end_ptr == first_JSON_object[key_index].data.string_type || last_timestamp == ULONG_MAX || *end_ptr != '\0') {
+		if (end_ptr == first_JSON_object[key_index].data.string_type || last_timestamp == ULONG_MAX || *end_ptr != '\0') {
 			fprintf(stderr,"invalid timestamp send from node server after /mine request\n");
 			exit(EXIT_FAILURE);
 		}
 		printf("Last timestamp: %lu\n",last_timestamp);
 		current_timestamp = (unsigned long) time(NULL);
 		printf("Current timestamp: %lu\n",current_timestamp);
-		if(current_timestamp < last_timestamp) {
+		if (current_timestamp < last_timestamp) {
 			block_to_hash.current_timestamp = last_timestamp + 1;
 		} else {
 			block_to_hash.current_timestamp = current_timestamp;
@@ -193,16 +194,16 @@ int main(int argc,char *argv[])
 		mining_fee = first_JSON_object[key_index].data.number_bool_or_null_type;
 		printf("Mining fee aka block reward: %lu\n",first_JSON_object[key_index].data.number_bool_or_null_type);
 
-		/* ask node for transactions to put in next block */
+		/* ask node for transactions to put in next block
 		http_write(main_socket,http_tx_request);
 
-		/* receive mining details from node API into http_response buf */
 		http_recv(main_socket,http_response,&tx_location);
 		printf("body length: %zu\n",strlen(tx_location));
-		if(strlen(tx_location) != 0) {
+		if (strlen(tx_location) != 0) {
 			printf("found transactions\n");
 			exit(EXIT_SUCCESS);
 		}
+		*/
 
 		printf("\n");
 		printf("\nmining...\n\n");
@@ -212,9 +213,6 @@ int main(int argc,char *argv[])
 
 	/* then close socket*/
 	close(main_socket);
-
-
-	
 
 	return 0;
 }

@@ -10,14 +10,16 @@
 struct member first_JSON_object[FIRST_JSON_OBJECT_SIZE];
 unsigned long first_JSON_object_index = 0;
 
-struct member spare_object_or_array_members[SPARE_OBJECT_OR_ARRAY_MEMBERS_SIZE];
-unsigned long spare_object_or_array_members_index = 0;
+/* struct member spare_object_or_array_members[SPARE_OBJECT_OR_ARRAY_MEMBERS_SIZE]; */
+/* unsigned long spare_object_or_array_members_index = 0; */
 
-char spare_chars[SPARE_CHARS_SIZE];
-unsigned long spare_chars_index = 0;
-unsigned char spare_chars_full = 0;
+static char spare_chars[SPARE_CHARS_SIZE]; /* maybe shouldn't be static */
+static unsigned long spare_chars_index = 0; /* maybe shouldn't be static */
+static unsigned char spare_chars_full = 0; /* maybe shouldn't be static */
 
-unsigned long find_key_index(char *keyname,unsigned char the_data_type) {
+unsigned long
+find_key_index(char *keyname,unsigned char the_data_type) {
+
 	unsigned long i;
 	for(i=0;i <= first_JSON_object_index;i++) {
 		if(!strcmp(first_JSON_object[i].key,keyname) && first_JSON_object[i].data_type == the_data_type) {
@@ -26,12 +28,16 @@ unsigned long find_key_index(char *keyname,unsigned char the_data_type) {
 	}
 	fprintf(stderr,"Could not find keyname %s of data type %d in JSON sent from node\n",keyname,the_data_type);
 	exit(EXIT_FAILURE);
+
 }
 
 /* input string can't be longer than an int in length */
 /* must be null character terminated */
-static unsigned char skip_whitespace_and_check_null(char **browse_string) {
+static unsigned char
+skip_whitespace_and_check_null(char **browse_string) {
+
 	int i;
+
 	for(i = 0;i < MAX_WHITESPACE_AROUND_STRUCTURAL_CHARACTER && (**browse_string == 0x20 || **browse_string == 0x09 || **browse_string == 0x0A || **browse_string == 0x0D);(*browse_string)++,i++) { 
 		 /* printf("whitespace encountered, i: %d\n",i); */
 	}	
@@ -46,19 +52,25 @@ static unsigned char skip_whitespace_and_check_null(char **browse_string) {
 	}
 
 	return SUCCESS;
+
 }
 
 /* must be null character terminated */
-static unsigned char parse_JSON_object(char **browse_string)
+static unsigned char
+parse_JSON_object(char **browse_string)
 {
+
 	if(skip_whitespace_and_check_null(browse_string) == FAILURE)
 		return FAILURE;
 	
 	return SUCCESS;
+
 }
 
-static unsigned char parse_string(char **browse_string)
+static unsigned char
+parse_string(char **browse_string)
 {
+
 	char *beginning_of_key;
 	char *end_of_key;
 	unsigned long valid_characters = 0;
@@ -126,10 +138,13 @@ static unsigned char parse_string(char **browse_string)
 			}
 		}
 	}
+
 }
 
-static unsigned char validate_key(char **browse_string)
+static unsigned char
+validate_key(char **browse_string)
 {
+
 	char *beginning_of_key;
 	char *end_of_key;
 	unsigned long valid_characters = 0;
@@ -210,10 +225,13 @@ static unsigned char validate_key(char **browse_string)
 			}
 		}
 	}
+
 }
 
-static unsigned char parse_true(char **browse_string)
+static unsigned char
+parse_true(char **browse_string)
 {
+
 	if(!strncmp(*browse_string,"rue",3)) {
 		(*browse_string) += 3;
 		first_JSON_object[first_JSON_object_index].data_type = IS_BOOL;
@@ -226,8 +244,10 @@ static unsigned char parse_true(char **browse_string)
 
 }
 
-static unsigned char parse_false(char **browse_string)
+static unsigned char
+parse_false(char **browse_string)
 {
+
 	if(!strncmp(*browse_string,"alse",4)) {
 		(*browse_string) += 4;
 		first_JSON_object[first_JSON_object_index].data_type = IS_BOOL;
@@ -240,8 +260,10 @@ static unsigned char parse_false(char **browse_string)
 
 }
 
-static unsigned char parse_null(char **browse_string)
+static unsigned char
+parse_null(char **browse_string)
 {
+
 	if(!strncmp(*browse_string,"ull",3)) {
 		(*browse_string) += 3;
 		first_JSON_object[first_JSON_object_index].data_type = IS_BOOL;
@@ -251,22 +273,31 @@ static unsigned char parse_null(char **browse_string)
 
 	fprintf(stderr,"Invalid JSON member value, perhaps you meant 'null'?\n");
 	return FAILURE;
+
 }
 
-static unsigned char parse_array(char **browse_string)
+static unsigned char
+parse_array(char **browse_string)
 {
+
 	fprintf(stderr,"array parsing not implemented yet\n");
 	return FAILURE;
+
 }
 
-static unsigned char parse_object(char **browse_string)
+static unsigned char
+parse_object(char **browse_string)
 {
+
 	fprintf(stderr,"object parsing not implemented yet\n");
 	return FAILURE;
+
 }
 
-static unsigned char parse_number(char **browse_string)
+static unsigned char
+parse_number(char **browse_string)
 {
+
 	char *the_endptr;
 	unsigned long strtoul_result = 0;
 	/* handle a leading '0' correctly because strtoul ignores it, and only '0' representing 0 is ok
@@ -289,10 +320,13 @@ static unsigned char parse_number(char **browse_string)
 	first_JSON_object[first_JSON_object_index].data_type = IS_NUMBER;
 	first_JSON_object[first_JSON_object_index].data.number_bool_or_null_type = strtoul_result;
 	return SUCCESS;
+
 }
 
-unsigned char parse_JSON(char **browse_string) 
+unsigned char
+parse_JSON(char **browse_string)
 {
+
 	/* initialize global variables related to this function to 0
 	 * so that previous JSON parsing is not persistent in memory
 	 * Need to redo these global variables as non-global
@@ -392,7 +426,5 @@ unsigned char parse_JSON(char **browse_string)
 		}
 
 	}
-	
-
 	/* return SUCCESS; */
 }

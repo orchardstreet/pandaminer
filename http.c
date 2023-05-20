@@ -9,7 +9,8 @@
 #include "headers/http.h"
 #include "headers/config.h"
 
-static unsigned char find_content_length(int *content_length, char *http_response) {
+static unsigned char
+find_content_length(int *content_length, char *http_response) {
 
 	char *browse_buf = http_response;
 	unsigned long number;
@@ -44,13 +45,15 @@ static unsigned char find_content_length(int *content_length, char *http_respons
 
 }
 
-unsigned char http_recv(int main_socket,char *http_response,char **body_location)
+unsigned char
+http_recv(int main_socket,char *http_response,char **body_location)
 {
 
 	int http_response_index = 0;
 	int bytes_left_in_http_response = HTTP_RESPONSE_SIZE;
 	ssize_t retval_ssize_t;
 	int content_length = 0;
+	unsigned long body_length = 0;
 	unsigned char found_content_length = 0;
 	(*body_location) = NULL;
 
@@ -74,10 +77,14 @@ unsigned char http_recv(int main_socket,char *http_response,char **body_location
 		http_response[http_response_index + retval_ssize_t] = 0;
 
 		if(!(*body_location)) {
-			(*body_location) =  strstr(http_response + http_response_index,"\r\n\r\n");
+			(*body_location) =  strstr(http_response,"\r\n\r\n");
 			if(*body_location) {
+				body_length += retval_ssize_t - (((*body_location + 3) - (http_response + http_response_index)) + 1);
+				printf("body length: %lu\n",body_length);
 				(*body_location) += 4; /* move pointer to start of body, past \r\n\r\n */
 			}
+		} else {
+			body_length += retval_ssize_t;
 		}
 		if((*body_location) && !found_content_length) {
 			if(find_content_length(&content_length,http_response) == SUCCESS) {
@@ -87,7 +94,11 @@ unsigned char http_recv(int main_socket,char *http_response,char **body_location
 				exit(EXIT_FAILURE);
 			}
 		}
-		if(found_content_length && (strlen(*body_location) == content_length)) {
+		if(found_content_length && body_length >= content_length) {
+			if (body_length > content_length) {
+				fprintf("Node sent more than we requested, fatal error, exiting\n");
+				exit(EXIT_FAILURE);
+			}
 			printf("\nHTTP response: \n\n%s\n\n",http_response); /* unecessary debug info */
 			return SUCCESS;
 		}
@@ -105,7 +116,8 @@ unsigned char http_recv(int main_socket,char *http_response,char **body_location
 
 }
 
-unsigned char http_write(int main_socket, char *http_request)
+unsigned char
+http_write(int main_socket, char *http_request)
 {
 	ssize_t retval_ssize_t;
 	size_t http_request_len = strlen(http_request);
@@ -127,7 +139,8 @@ unsigned char http_write(int main_socket, char *http_request)
 
 }
 
-unsigned char http_connect(int *main_socket,char *node_ip_address,char *port) {
+unsigned char
+http_connect(int *main_socket,char *node_ip_address,char *port) {
 
 	struct addrinfo hints;
 	struct addrinfo *address;

@@ -6,11 +6,11 @@
 #include "headers/config.h"
 #define QUIT_PROMPT_RESULT_SIZE 6
 
-char quit_prompt_input[QUIT_PROMPT_RESULT_SIZE]; /* Every compiler 0s out global variables, so this is 0d out, doesn't matter for current implementation though */
+static char quit_prompt_input[QUIT_PROMPT_RESULT_SIZE]; /* Every compiler 0s out global variables, so this is 0d out, doesn't matter for current implementation though */
 
 static signed char flush_stdin(void) {
 	int c;
-	for(;;) {
+	for (;;) {
 		c = getc(stdin);
 		if(c == '\n') {
 			return CONTINUE;
@@ -38,7 +38,7 @@ static signed char prompt_quit(char *prompt) {
 	signed char special_character_present = 0;
 	signed char retval;
 	
-	for(;;) {
+	for (;;) {
 		
 		printf("%s",prompt);	
 		fflush(stdout);
@@ -48,7 +48,7 @@ static signed char prompt_quit(char *prompt) {
 		 * Also 0ing out the buffer before fgets helps with program analysis */
 		memset(quit_prompt_input,0,QUIT_PROMPT_RESULT_SIZE); 
 		if (fgets(quit_prompt_input,QUIT_PROMPT_RESULT_SIZE - 1,stdin) == NULL) {
-			if(ferror(stdin)) {
+			if (ferror(stdin)) {
 				perror("");
 				fprintf(stderr,"\nfgets failure\n");
 				return EXIT_PROGRAM; 
@@ -61,13 +61,13 @@ static signed char prompt_quit(char *prompt) {
 				return EXIT_PROGRAM; /* exit */
 			}
 		}
-		if(!isatty(0)) {
+		if (!isatty(0)) {
 			printf("\n");
 		}
 		
 		/* CHECK FOR OVERFLOW, this should be the first check in this function that doesn't exit entire program (besides EOF check) */
 		newline_position = memchr(quit_prompt_input,'\n',QUIT_PROMPT_RESULT_SIZE - 2);
-		if(!newline_position) {
+		if (!newline_position) {
 			/* flush stdin */
 			retval = flush_stdin();
 			if (retval == CONTINUE) {
@@ -93,14 +93,14 @@ static signed char prompt_quit(char *prompt) {
 		 * This null character check should always be here, so we don't process an empty string */
 		/* Check for other special characters beyond first byte.  This check beyond the first byte can be modified  
 		 * At this point in the function, a newline position exists, and it's not the first character */
-		for(browse_input = quit_prompt_input;browse_input < newline_position ;browse_input++) {
-			if(*browse_input < 'A' || (*browse_input < 'a' && *browse_input > 'Z') || *browse_input > 'z' ) {
+		for (browse_input = quit_prompt_input;browse_input < newline_position ;browse_input++) {
+			if (*browse_input < 'A' || (*browse_input < 'a' && *browse_input > 'Z') || *browse_input > 'z' ) {
 				special_character_present = 1;
 				break;
 			}
 		}
 		
-		if(special_character_present) {
+		if (special_character_present) {
 			printf("Invalid input, please enter letters from a-z\n");
 			special_character_present = 0;
 			continue;
@@ -146,7 +146,7 @@ signed char readline_custom(char *prompt,char *input, size_t input_size_temp,siz
 		return EXIT_PROGRAM; /* exit */
 	}
 		
-	for(;;) {
+	for (;;) {
 		
 		printf("%s",prompt);
 		fflush(stdout);
@@ -157,7 +157,7 @@ signed char readline_custom(char *prompt,char *input, size_t input_size_temp,siz
 		 * Also 0ing out the buffer before fgets helps with program analysis */
 		memset(input,0,input_size_temp);
 		if (fgets(input,input_size_temp - 1,stdin) == NULL) {
-			if(ferror(stdin)) {
+			if (ferror(stdin)) {
 				perror("");
 				fprintf(stderr,"\nfgets failure\n");
 				return EXIT_PROGRAM; 
@@ -173,13 +173,13 @@ signed char readline_custom(char *prompt,char *input, size_t input_size_temp,siz
 				return EXIT_PROGRAM; /* exit */
 			}
 		}
-		if(!isatty(0)) {
+		if (!isatty(0)) {
 			printf("\n");
 		}
 		
 		/* CHECK FOR OVERFLOW, this should be the first check in this function that doesn't exit entire program (besides EOF check) */
 		newline_position = memchr(input,'\n',input_size_temp - 2);
-		if(!newline_position) {
+		if (!newline_position) {
 			/* flush stdin */
 			retval = flush_stdin();
 			if (retval == CONTINUE) {
@@ -202,7 +202,7 @@ signed char readline_custom(char *prompt,char *input, size_t input_size_temp,siz
 		/* Get rid of newline */
 		*newline_position = 0;
 		
-		if(*input == 'q' && input[1] == 0) {
+		if (*input == 'q' && input[1] == 0) {
 			retval = prompt_quit("Are you sure you want to quit? (y)es/(n)o: ");
 			if(retval == EXIT_PROGRAM || retval == YES)
 				return EXIT_PROGRAM;
@@ -214,14 +214,14 @@ signed char readline_custom(char *prompt,char *input, size_t input_size_temp,siz
 		/* Also, check for other special characters beyond the first byte.  Checking beyond first byte for null character
 		 * can be modified.
 		 * At this point in the function, a newline position exists, and it's not the first character */
-		for(browse_input = input;browse_input < newline_position ;browse_input++) {
-			if(*browse_input < ' ' ) {
+		for (browse_input = input;browse_input < newline_position ;browse_input++) {
+			if (*browse_input < ' ' ) {
 				special_character_present = 1;
 				break;
 			}
 		}
 		
-		if(special_character_present) {
+		if (special_character_present) {
 			printf("Invalid input, please no special characters in input` \n");
 			special_character_present = 0;
 			continue;
