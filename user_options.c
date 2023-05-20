@@ -6,7 +6,8 @@
 #include "headers/config.h"
 
 static unsigned char
-parse_command_line(char **argv, char *port, char *node_ip_address) {
+parse_command_line(char **argv, char *port, char *node_ip_address)
+{
 
 	unsigned char cmd_port_valid = 0;
 	unsigned char cmd_ip_valid = 0;
@@ -47,7 +48,8 @@ parse_command_line(char **argv, char *port, char *node_ip_address) {
 }
 
 void
-get_user_options(int argc, char **argv, char *port, size_t port_buf_size, char *node_ip_address, size_t node_ip_address_buf_size) {
+get_user_options(int argc, char **argv, char *port, size_t port_buf_size, char *node_ip_address, size_t node_ip_address_buf_size)
+{
 
 	size_t result_str_len;
 	signed char retval;

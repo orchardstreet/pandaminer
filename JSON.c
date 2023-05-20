@@ -21,8 +21,8 @@ unsigned long
 find_key_index(char *keyname,unsigned char the_data_type) {
 
 	unsigned long i;
-	for(i=0;i <= first_JSON_object_index;i++) {
-		if(!strcmp(first_JSON_object[i].key,keyname) && first_JSON_object[i].data_type == the_data_type) {
+	for (i=0;i <= first_JSON_object_index;i++) {
+		if (!strcmp(first_JSON_object[i].key,keyname) && first_JSON_object[i].data_type == the_data_type) {
 			return i;
 		}
 	}
@@ -38,15 +38,15 @@ skip_whitespace_and_check_null(char **browse_string) {
 
 	int i;
 
-	for(i = 0;i < MAX_WHITESPACE_AROUND_STRUCTURAL_CHARACTER && (**browse_string == 0x20 || **browse_string == 0x09 || **browse_string == 0x0A || **browse_string == 0x0D);(*browse_string)++,i++) { 
+	for (i = 0;i < MAX_WHITESPACE_AROUND_STRUCTURAL_CHARACTER && (**browse_string == 0x20 || **browse_string == 0x09 || **browse_string == 0x0A || **browse_string == 0x0D);(*browse_string)++,i++) {
 		 /* printf("whitespace encountered, i: %d\n",i); */
 	}	
-	if(i==100) {
+	if (i==100) {
 		fprintf(stderr,"Error, JSON has too much whitespace around a structural characater\n");
 		return FAILURE;
 	}
 
-	if(!(**browse_string)) {
+	if (!(**browse_string)) {
 		fprintf(stderr,"Error, null character found before last closing bracket\n");
 		return FAILURE;
 	}
@@ -60,7 +60,7 @@ static unsigned char
 parse_JSON_object(char **browse_string)
 {
 
-	if(skip_whitespace_and_check_null(browse_string) == FAILURE)
+	if (skip_whitespace_and_check_null(browse_string) == FAILURE)
 		return FAILURE;
 	
 	return SUCCESS;
@@ -82,12 +82,12 @@ parse_string(char **browse_string)
 		return FAILURE;
 	}
 	beginning_of_key = *browse_string;
-	for(;;(*browse_string)++,valid_characters++) {
+	for (;;(*browse_string)++,valid_characters++) {
 		if(valid_characters == ULONG_MAX) {
 			fprintf(stderr,"Error, A continuous string in JSON body cannot exceed %lu characters\n",ULONG_MAX);
 			return FAILURE;
 		}
-		if(!(**browse_string)) {
+		if (!(**browse_string)) {
 			fprintf(stderr,"Error, null character found before last closing bracket\n");
 			return FAILURE;
 		}
@@ -98,11 +98,11 @@ parse_string(char **browse_string)
 
 		}
 		*/
-		if(**browse_string == '"') {
+		if (**browse_string == '"') {
 			end_of_key = *browse_string;
 			(*browse_string)++;
 			/* if key is an empty string */
-			if(end_of_key == beginning_of_key) {
+			if (end_of_key == beginning_of_key) {
 				spare_chars[spare_chars_index] = 0;
 				/* store a null character in spare_chars to represent an empty string */
 				first_JSON_object[first_JSON_object_index].data_type = IS_STRING;
@@ -115,7 +115,7 @@ parse_string(char **browse_string)
 			} else {
 				/* if key is a non-empty string and there's enough memory to store the string in spare_chars buffer
 				 * including a null character appended at the end of the string */
-				if(valid_characters + 1 <= SPARE_CHARS_SIZE - spare_chars_index) {
+				if (valid_characters + 1 <= SPARE_CHARS_SIZE - spare_chars_index) {
 					/* store the key in spare_chars */
 					memcpy(spare_chars + spare_chars_index, beginning_of_key, valid_characters);
 					first_JSON_object[first_JSON_object_index].data_type = IS_STRING;
@@ -124,7 +124,7 @@ parse_string(char **browse_string)
 					spare_chars[spare_chars_index] = 0; /* null terminate key in spare_chars array */
 					/* if we hit the spare_chars memory limit, but didn't exceed it, tell program not to iterate
 					 * any variables or append to any buffers associated with the spare_chars array */
-					if(spare_chars_index == SPARE_CHARS_SIZE - 1) {
+					if (spare_chars_index == SPARE_CHARS_SIZE - 1) {
 						spare_chars_full = 1;
 					} else {
 						spare_chars_index++; /* move to empty position */

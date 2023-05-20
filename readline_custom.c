@@ -8,7 +8,10 @@
 
 static char quit_prompt_input[QUIT_PROMPT_RESULT_SIZE]; /* Every compiler 0s out global variables, so this is 0d out, doesn't matter for current implementation though */
 
-static signed char flush_stdin(void) {
+static signed char
+flush_stdin(void)
+{
+
 	int c;
 	for (;;) {
 		c = getc(stdin);
@@ -22,9 +25,12 @@ static signed char flush_stdin(void) {
 			return EOF_SEEN;
 		}
 	}
+
 }
 
-static signed char prompt_quit(char *prompt) {
+static signed char
+prompt_quit(char *prompt)
+{
 	/* Asks user if he wants to quit or not
          * returns YES on "yes", NO on "no, and EXIT_PROGRAM if the program should exit 
 	 * Attempts to read from stdin to memory, until a valid input is given. 
@@ -119,7 +125,9 @@ static signed char prompt_quit(char *prompt) {
 	
 } 
 
-signed char readline_custom(char *prompt,char *input, size_t input_size_temp,size_t *result_string_length) {
+signed char
+readline_custom(char *prompt,char *input, size_t input_size_temp,size_t *result_string_length)
+{
 	/* !! Don't pass a pointer to an array of size less than 4 !! */
 	/* Asks user for input.
 	 * Attempts to read from stdin to memory, until a valid input is given.
